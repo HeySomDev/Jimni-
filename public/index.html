@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>AI চ্যাট</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background: #0b0b0e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-app {
+            width: 100%;
+            max-width: 450px;
+            height: 100vh;
+            max-height: 800px;
+            background: #1a1a1e;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+            border: 1px solid #2a2a30;
+        }
+        /* হেডার */
+        .header {
+            background: #2a2a30;
+            padding: 18px 20px;
+            border-bottom: 1px solid #3a3a42;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header .avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6C63FF, #3b82f6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 18px;
+        }
+        .header .info h2 {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .header .info p {
+            color: #8e8e9a;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+        .header .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #34d399;
+            border-radius: 50%;
+            margin-left: auto;
+            box-shadow: 0 0 8px #34d399;
+        }
+
+        /* মেসেজ এরিয়া */
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #121216;
+        }
+        .messages::-webkit-scrollbar {
+            width: 4px;
+        }
+        .messages::-webkit-scrollbar-thumb {
+            background: #3a3a42;
+            border-radius: 4px;
+        }
+
+        .msg {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            animation: fadeUp 0.3s ease;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg.user {
+            background: #6C63FF;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .msg.bot {
+            background: #2a2a32;
+            color: #e4e4e8;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #3a3a42;
+        }
+        .msg .time {
+            font-size: 10px;
+            opacity: 0.5;
+            margin-top: 6px;
+            text-align: right;
+        }
+
+        .typing-indicator {
+            align-self: flex-start;
+            background: #2a2a32;
+            padding: 12px 18px;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            display: flex;
+            gap: 5px;
+            border: 1px solid #3a3a42;
+        }
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #8e8e9a;
+            border-radius: 50%;
+            display: inline-block;
+            animation: typing 1.4s infinite both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0% { transform: scale(0.8); opacity: 0.4; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.4; }
+        }
+
+        /* ইনপুট বার */
+        .input-area {
+            background: #1a1a1e;
+            padding: 12px 16px;
+            border-top: 1px solid #2a2a30;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .input-area input {
+            flex: 1;
+            background: #2a2a32;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 30px;
+            color: white;
+            font-size: 15px;
+            outline: none;
+            border: 1px solid #3a3a42;
+            transition: 0.2s;
+        }
+        .input-area input:focus {
+            border-color: #6C63FF;
+            box-shadow: 0 0 10px rgba(108, 99, 255, 0.2);
+        }
+        .input-area button {
+            background: #6C63FF;
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .input-area button:hover {
+            background: #5a52e0;
+            transform: scale(1.02);
+        }
+        .input-area button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: scale(0.95);
+        }
+
+        /* এরর মেসেজ */
+        .error-msg {
+            color: #f87171;
+            background: rgba(248, 113, 113, 0.1);
+            border: 1px solid #f87171;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            text-align: center;
+            margin: 4px 0;
+        }
+
+        @media (max-width: 480px) {
+            .chat-app {
+                max-height: 100vh;
+                border-radius: 0;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-app">
+        <!-- হেডার -->
+        <div class="header">
+            <div class="avatar">AI</div>
+            <div class="info">
+                <h2>হিউমিনি চ্যাট</h2>
+                <p>অনলাইন · রিয়েল-টাইম</p>
+            </div>
+            <div class="status-dot"></div>
+        </div>
+
+        <!-- মেসেজ উইন্ডো -->
+        <div class="messages" id="messageContainer">
+            <div class="msg bot">
+                হ্যালো! আমি আপনার AI সহকারী। কীভাবে সাহায্য করতে পারি?
+                <div class="time">এখন</div>
+            </div>
+        </div>
+
+        <!-- টাইপিং ইন্ডিকেটর (লুকানো) -->
+        <div id="typingIndicator" class="typing-indicator" style="display: none; margin: 0 14px 4px 14px;">
+            <span></span><span></span><span></span>
+        </div>
+
+        <!-- ইনপুট ফিল্ড -->
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="মেসেজ লিখুন..." />
+            <button id="sendBtn">➤</button>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('messageContainer');
+        const input = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const typing = document.getElementById('typingIndicator');
+
+        function getTime() {
+            const now = new Date();
+            return now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+        }
+
+        function addMessage(text, sender) {
+            const div = document.createElement('div');
+            div.className = `msg ${sender}`;
+            div.innerHTML = `${text} <div class="time">${getTime()}</div>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+
+            // ইউজার মেসেজ দেখান
+            addMessage(text, 'user');
+            input.value = '';
+            sendBtn.disabled = true;
+            typing.style.display = 'flex';
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.reply) {
+                    addMessage(data.reply, 'bot');
+                } else {
+                    addMessage('❌ ' + (data.error || 'সার্ভার থেকে ভুল রেসপন্স'), 'bot');
+                }
+            } catch (error) {
+                addMessage('❌ নেটওয়ার্ক সমস্যা! আবার চেষ্টা করুন।', 'bot');
+            } finally {
+                typing.style.display = 'none';
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        // এন্টার প্রেস করলে পাঠাবে
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        sendBtn.addEventListener('click', sendMessage);
+    </script>
+</body>
+              </html>
